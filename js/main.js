@@ -1,14 +1,62 @@
 /* =========================================================
    ImMiku — Creado por Chizu
-   Subida de archivos mediante la API pública de CatBox
+   Subida multi-host: Uguu → Lain.la → envs.sh → 0x0.st
+   (con reintentos automáticos vía proxy si el navegador bloquea)
    ========================================================= */
 
-const CATBOX_API = "https://catbox.moe/user/api.php";
-const PROXIES = [
-  (url) => "https://corsproxy.io/?url=" + encodeURIComponent(url),
-  (url) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+const MAX_SIZE = 100 * 1024 * 1024; // ~100 MB (límite seguro entre hosts)
+
+const HOSTS = [
+  {
+    name: "Uguu",
+    url: "https://uguu.se/upload.php",
+    field: "files[]",
+    note: "⚠️ Enlace temporal: dura 3 horas (host Uguu).",
+    parse(text) {
+      try {
+        const j = JSON.parse(text);
+        const item = Array.isArray(j) ? j[0] : j;
+        return item && item.url ? item.url : null;
+      } catch { return /^https?:\/\//.test(text.trim()) ? text.trim() : null; }
+    },
+  },
+  {
+    name: "Lain.la",
+    url: "https://pomf.lain.la/upload.php",
+    field: "files[]",
+    note: "✅ Enlace permanente (host Lain.la).",
+    parse(text) {
+      try {
+        const j = JSON.parse(text);
+        if (j.success && j.files && j.files[0]) {
+          let u = j.files[0].url;
+          if (u.startsWith("/")) u = "https://pomf.lain.la" + u;
+          return u;
+        }
+        return null;
+      } catch { return /^https?:\/\//.test(text.trim()) ? text.trim() : null; }
+    },
+  },
+  {
+    name: "envs.sh",
+    url: "https://envs.sh",
+    field: "file",
+    note: "✅ Enlace permanente (host envs.sh).",
+    parse(text) { return /^https?:\/\/\S+$/.test(text.trim()) ? text.trim() : null; },
+  },
+  {
+    name: "0x0.st",
+    url: "https://0x0.st",
+    field: "file",
+    note: "✅ Enlace permanente mientras haya actividad (host 0x0.st).",
+    parse(text) { return /^https?:\/\/\S+$/.test(text.trim()) ? text.trim() : null; },
+  },
 ];
-const MAX_SIZE = 200 * 1024 * 1024; // 200 MB
+
+const PROXIES = [
+  (u) => "https://corsproxy.io/?url=" + encodeURIComponent(u),
+  (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
+];
 
 const $ = (id) => document.getElementById(id);
 const dropzone   = $("dropzone");
@@ -22,6 +70,7 @@ const progressFill = $("progressFill");
 const progressText = $("progressText");
 const result     = $("result");
 const resultUrl  = $("resultUrl");
+const resultNote = $("resultNote");
 const resultEmbed= $("resultEmbed");
 const btnCopy    = $("btnCopy");
 const errorMsg   = $("errorMsg");
@@ -51,7 +100,7 @@ dropzone.addEventListener("drop", (e) => {
 
 function selectFile(file) {
   if (file.size > MAX_SIZE) {
-    showError("⚠️ El archivo supera los 200 MB permitidos por CatBox.");
+    showError("⚠️ El archivo supera los ~100 MB. Prueba con uno más liviano.");
     return;
   }
   hideError();
@@ -62,19 +111,20 @@ function selectFile(file) {
   result.hidden = true;
 }
 
-/* ---------- Subida a CatBox (directo, con respaldo por proxy) ---------- */
+/* ---------- Subida multi-host ---------- */
 btnUpload.addEventListener("click", () => {
   if (!currentFile) return;
   hideError();
   setUploading(true);
   setProgress(0);
-  uploadToCatBox(currentFile, {
+
+  uploadWithFallback(currentFile, {
     onProgress: setProgress,
-    onSuccess: (url) => {
+    onSuccess: (url, host) => {
       setProgress(100);
-      showResult(url, currentFile);
+      showResult(url, currentFile, host);
       saveToHistory(currentFile.name, url);
-      showToast("✅ ¡Subida completada!");
+      showToast("✅ ¡Subida completada con " + host.name + "!");
       currentFile = null;
       fileInput.value = "";
       setUploading(false);
@@ -93,91 +143,80 @@ function setUploading(state) {
   if (state) { progressWrap.hidden = false; result.hidden = true; }
 }
 
-/**
- * Intenta la subida directa a CatBox. Si el navegador la bloquea
- * (CORS, adblock, firewall → status 0), reintenta automáticamente
- * a través de proxies CORS públicos hasta que una funcione.
- */
-function uploadToCatBox(file, { onProgress, onSuccess, onError }, attempt = 0) {
-  const direct = attempt === 0;
-  const endpoint = direct ? CATBOX_API : PROXIES[attempt - 1](CATBOX_API);
+/** Recorre los hosts; en cada uno intenta directo y luego por proxy. */
+function uploadWithFallback(file, handlers, hostIdx = 0, proxyIdx = -1) {
+  if (hostIdx >= HOSTS.length) {
+    handlers.onError(
+      "❌ Ningún host disponible. Revisa tu internet, desactiva el adblock para esta página e intenta de nuevo."
+    );
+    return;
+  }
+  const host = HOSTS[hostIdx];
+  const viaProxy = proxyIdx >= 0;
+  const endpoint = viaProxy ? PROXIES[proxyIdx](host.url) : host.url;
 
   const formData = new FormData();
-  formData.append("reqtype", "fileupload");
-  formData.append("fileToUpload", file);
+  formData.append(host.field, file);
 
   const xhr = new XMLHttpRequest();
   xhr.open("POST", endpoint, true);
   xhr.timeout = 300000; // 5 min
 
-  if (direct) {
+  if (!viaProxy) {
     xhr.upload.addEventListener("progress", (e) => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+      if (e.lengthComputable) handlers.onProgress(Math.round((e.loaded / e.total) * 100));
     });
   } else {
-    // A través del proxy no hay eventos de progreso: mostramos animación indeterminada
-    fakeProgress(onProgress);
+    fakeProgress(handlers.onProgress);
   }
 
   xhr.addEventListener("load", () => {
     stopFakeProgress();
     const resp = (xhr.responseText || "").trim();
+    const url = host.parse(resp);
 
-    if (xhr.status >= 200 && xhr.status < 300 && isCatBoxUrl(resp)) {
-      onSuccess(resp);
+    if (xhr.status >= 200 && xhr.status < 300 && url) {
+      handlers.onSuccess(url, host);
       return;
     }
 
-    // ¿La respuesta es un error de CatBox (ej. tipo de archivo prohibido)?
-    if (xhr.status >= 200 && xhr.status < 300 && resp && !isCatBoxUrl(resp)) {
-      stopFakeProgress();
-      onError("❌ CatBox rechazó el archivo: " + resp + " (si es .exe/.scr/.bat, prueba comprimirlo en .zip o .7z)");
+    // El host respondió pero con error (ej. tipo prohibido)
+    if (xhr.status >= 200 && xhr.status < 300 && resp && !url) {
+      handlers.onError("❌ " + host.name + " rechazó el archivo: " + resp.slice(0, 160) +
+        (resp.toLowerCase().includes("extension") || resp.toLowerCase().includes("banned")
+          ? " (prueba comprimirlo en .zip)" : ""));
       return;
     }
 
-    // Bloqueo de red/CORS → probar siguiente ruta
-    if (attempt < PROXIES.length) {
-      uploadToCatBox(file, { onProgress, onSuccess, onError }, attempt + 1);
-    } else {
-      onError(buildFailMsg(xhr));
-    }
+    nextRoute();
   });
 
-  xhr.addEventListener("error", () => {
-    stopFakeProgress();
-    if (attempt < PROXIES.length) {
-      uploadToCatBox(file, { onProgress, onSuccess, onError }, attempt + 1);
-    } else {
-      onError("❌ No se pudo conectar con CatBox. Revisa tu internet, desactiva el adblock para esta página e intenta de nuevo.");
-    }
-  });
-
+  xhr.addEventListener("error", () => { stopFakeProgress(); nextRoute(); });
   xhr.addEventListener("timeout", () => {
     stopFakeProgress();
-    onError("⏱️ La subida tardó demasiado (más de 5 min). Intenta con un archivo más liviano.");
+    handlers.onError("⏱️ La subida tardó demasiado. Intenta con un archivo más liviano.");
   });
+
+  function nextRoute() {
+    if (!viaProxy) {
+      uploadWithFallback(file, handlers, hostIdx, 0); // mismo host vía proxy 1
+    } else if (proxyIdx + 1 < PROXIES.length) {
+      uploadWithFallback(file, handlers, hostIdx, proxyIdx + 1); // proxy 2
+    } else {
+      uploadWithFallback(file, handlers, hostIdx + 1, -1); // siguiente host
+    }
+  }
 
   xhr.send(formData);
 }
 
-function isCatBoxUrl(text) {
-  return /^https?:\/\/(files\.)?catbox\.moe\//i.test(text);
-}
-
-function buildFailMsg(xhr) {
-  let detail = "";
-  try { detail = (xhr.responseText || "").trim().slice(0, 200); } catch {}
-  return "❌ Falló la subida (HTTP " + xhr.status + (detail ? ": " + detail : "") +
-         "). Desactiva extensiones (adblock/VPN) y recarga la página.";
-}
-
-/* Barra de progreso "indeterminada" para cuando usamos proxy */
+/* Barra indeterminada cuando usamos proxy (no hay eventos de progreso) */
 let fakeTimer = null;
 function fakeProgress(onProgress) {
   let p = 5;
   onProgress(p);
   fakeTimer = setInterval(() => {
-    p = Math.min(p + Math.random() * 4, 92); // nunca llega al 100 hasta confirmar
+    p = Math.min(p + Math.random() * 4, 92);
     onProgress(Math.round(p));
   }, 400);
 }
@@ -186,9 +225,13 @@ function stopFakeProgress() {
 }
 
 /* ---------- Resultado ---------- */
-function showResult(url, file) {
+function showResult(url, file, host) {
   result.hidden = false;
   resultUrl.value = url;
+  if (resultNote) {
+    resultNote.textContent = host.note;
+    resultNote.hidden = false;
+  }
   resultEmbed.innerHTML = "";
   resultEmbed.hidden = true;
 
@@ -251,7 +294,7 @@ function renderHistoryItem({ name, url }) {
 
   const a = document.createElement("a");
   a.href = url; a.target = "_blank"; a.rel = "noopener";
-  a.textContent = url.replace("https://", "");
+  a.textContent = url.replace(/^https?:\/\//, "");
 
   const btn = document.createElement("button");
   btn.className = "h-copy"; btn.textContent = "Copiar";
