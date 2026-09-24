@@ -1,63 +1,106 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ImMiku - Subidor de Archivos Miku Nakano</title>
-    <!-- Ícono de la página -->
-    <link rel="icon" href="https://files.catbox.moe/n9jwzx.jpeg" type="image/jpeg">
-    <!-- Fuente Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Estilos CSS -->
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ImMiku — Subidas estilo Miku</title>
+  <meta name="description" content="ImMiku: sube fotos, videos y más, estilo Miku Nakano. Creado por Chizu." />
+  <link rel="icon" href="https://files.catbox.moe/n9jwzx.jpeg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+<base target="_blank">
 </head>
 <body>
+  <div class="bg-decor" aria-hidden="true"></div>
 
-    <!-- Banner Superior -->
-    <div class="banner-container">
-        <img src="https://files.catbox.moe/ywxml2.jpeg" alt="Miku Nakano Banner">
+  <header class="site-header">
+    <div class="brand">
+      <img class="brand-icon" src="https://files.catbox.moe/n9jwzx.jpeg" alt="Icono ImMiku" />
+      <span class="brand-name">Im<span>Miku</span></span>
     </div>
+    <nav class="nav">
+      <a href="#subir">Subir</a>
+      <a href="#historial">Historial</a>
+      <a href="#info">Info</a>
+    </nav>
+  </header>
 
-    <!-- Carta Principal -->
-    <div class="main-card">
-        <div class="profile-header">
-            <img src="https://files.catbox.moe/n9jwzx.jpeg" alt="Miku Icon" class="profile-icon">
-            <h1 class="title">ImMiku</h1>
-        </div>
-        
-        <p class="subtitle">Sube tu imagen, video o archivo y obtén un enlace directo 🎧</p>
-
-        <!-- Formulario -->
-        <form id="uploadForm">
-            <div class="upload-box" id="dropArea">
-                <p id="fileLabel">Haz clic o arrastra un archivo aquí</p>
-                <input type="file" id="fileInput" name="fileToUpload" required>
-            </div>
-
-            <!-- Vista previa -->
-            <img id="preview" alt="Vista previa">
-
-            <button type="submit" class="btn-upload" id="submitBtn">Subir a Catbox</button>
-        </form>
-
-        <!-- Cargando -->
-        <div class="loader" id="loader"></div>
-
-        <!-- Enlace generado -->
-        <div class="result-container" id="resultContainer">
-            <p style="font-size: 0.85rem; margin-bottom: 5px; color: #555;">¡Tu enlace está listo! 🎧</p>
-            <input type="text" id="urlResult" readonly>
-            <button class="btn-copy" id="copyBtn">Copiar enlace</button>
-        </div>
+  <section class="hero">
+    <img class="hero-banner" src="https://files.catbox.moe/ywxml2.jpeg" alt="Banner Miku Nakano" />
+    <div class="hero-text">
+      <h1>Sube tus archivos, estilo <span class="accent">Miku</span></h1>
+      <p>Fotos, videos, audio y más. Arrastra, suelta y obtén tu enlace al instante. Sin registro. Gratis.</p>
     </div>
+  </section>
 
-    <!-- Firma -->
-    <footer>
-        Creado por Chizu
-    </footer>
+  <main>
+    <!-- ============ ZONA DE SUBIDA ============ -->
+    <section id="subir" class="card upload-card">
+      <h2>📤 Subir archivo</h2>
 
-    <!-- Lógica JS -->
-    <script src="script.js"></script>
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Zona de subida">
+        <div class="dz-icon">🎧</div>
+        <p class="dz-main">Arrastra tu archivo aquí o <span class="link">haz clic para elegir</span></p>
+        <p class="dz-sub">Máx. 200 MB — Imágenes, videos, audio, documentos…</p>
+        <input type="file" id="fileInput" hidden />
+      </div>
+
+      <div id="filePreview" class="file-preview" hidden>
+        <div class="fp-info">
+          <span id="fpName" class="fp-name"></span>
+          <span id="fpSize" class="fp-size"></span>
+        </div>
+        <button id="btnUpload" class="btn btn-primary">Subir ahora ✨</button>
+      </div>
+
+      <div id="progressWrap" class="progress-wrap" hidden>
+        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+        <span id="progressText">0%</span>
+      </div>
+
+      <div id="result" class="result" hidden>
+        <p class="result-label">✅ Tu enlace está listo:</p>
+        <div class="result-row">
+          <input id="resultUrl" class="result-url" type="text" readonly />
+          <button id="btnCopy" class="btn btn-primary">Copiar</button>
+        </div>
+        <div id="resultEmbed" class="result-embed" hidden></div>
+      </div>
+
+      <p id="errorMsg" class="error" hidden></p>
+    </section>
+
+    <!-- ============ HISTORIAL ============ -->
+    <section id="historial" class="card">
+      <div class="card-head">
+        <h2>🕘 Historial local</h2>
+        <button id="btnClear" class="btn btn-ghost">Limpiar</button>
+      </div>
+      <ul id="historyList" class="history"></ul>
+      <p id="historyEmpty" class="muted">Aún no has subido nada… ¡anímate!</p>
+    </section>
+
+    <!-- ============ INFO ============ -->
+    <section id="info" class="card info">
+      <h2>ℹ️ Acerca de ImMiku</h2>
+      <div class="info-grid">
+        <div class="info-item"><span class="info-num">200MB</span><span class="info-desc">tamaño máximo por archivo</span></div>
+        <div class="info-item"><span class="info-num">∞</span><span class="info-desc">almacenamiento en CatBox</span></div>
+        <div class="info-item"><span class="info-num">0</span><span class="info-desc">registros necesarios</span></div>
+        <div class="info-item"><span class="info-num">100%</span><span class="info-desc">gratis para siempre</span></div>
+      </div>
+      <p class="muted">Los enlaces no caducan. Compatible con imágenes, video, audio, texto y archivos comprimidos. Alojado en GitHub Pages, potenciado por la API de CatBox.</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img src="https://files.catbox.moe/n9jwzx.jpeg" alt="" class="footer-icon" />
+    <p>ImMiku — Creado por <strong>Chizu</strong> 💙</p>
+  </footer>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/main.js"></script>
 </body>
 </html>
-
