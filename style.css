@@ -1,0 +1,92 @@
+:root{
+  --green:#37c978; --green-d:#1d9e58; --green-soft:#e6f9ee;
+  --ink:#1f3a2d; --muted:#6f8f7d; --bg:#f3fbf6; --card:#ffffff;
+  --radius:22px;
+  --font:'Nunito',system-ui,sans-serif; --hand:'Patrick Hand',cursive;
+}
+*{box-sizing:border-box;margin:0}
+[hidden]{display:none!important}
+body{font:16px/1.6 var(--font);color:var(--ink);background:
+  radial-gradient(circle at 10% 10%, #d9f7e5 0, transparent 40%),
+  radial-gradient(circle at 90% 20%, #cff3de 0, transparent 35%),
+  var(--bg);
+  -webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+:focus-visible{outline:3px solid var(--green);outline-offset:3px;border-radius:8px}
+.muted{color:var(--muted)}
+
+/* ---------- top ---------- */
+.top{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;background:var(--card);box-shadow:0 2px 14px rgba(29,158,88,.12);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:12px}
+.icon{width:44px;height:44px;border-radius:50%;object-fit:cover;border:3px solid var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.logo{font-family:var(--hand);font-size:28px;color:var(--green-d);letter-spacing:.5px}
+.tag{font-weight:700;color:var(--muted);font-size:14px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;max-width:1100px;margin:26px auto 0;padding:0 20px}
+.banner{width:100%;max-height:300px;object-fit:cover;border-radius:var(--radius);display:block;box-shadow:0 12px 34px rgba(29,158,88,.25);border:4px solid #fff}
+.hero-text{position:absolute;left:48px;bottom:24px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.hero-text h1{font-family:var(--hand);font-size:clamp(34px,5vw,56px)}
+.hp{display:inline-block;animation:spin 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.hero-text p{font-weight:600;font-size:clamp(13px,1.6vw,17px)}
+
+/* ---------- wrap ---------- */
+.wrap{max-width:860px;margin:34px auto 60px;padding:0 20px}
+
+/* ---------- drop ---------- */
+.drop{position:relative;overflow:hidden;background:var(--card);border:3px dashed var(--green);border-radius:var(--radius);padding:48px 36px 38px;display:grid;gap:20px;justify-items:center;text-align:center;transition:.2s;box-shadow:0 8px 26px rgba(29,158,88,.12)}
+.drop.over{background:var(--green-soft);border-color:var(--green-d);transform:scale(1.01)}
+.drop h2{font-size:clamp(22px,3vw,30px);color:var(--green-d)}
+.drop p{color:var(--muted)}
+.notes{display:flex;gap:26px;font-size:22px;color:var(--green)}
+.notes i{font-style:normal;display:inline-block;animation:float 3s ease-in-out infinite}
+.notes i:nth-child(2){animation-delay:.4s}.notes i:nth-child(3){animation-delay:.8s}
+.notes i:nth-child(4){animation-delay:1.2s}.notes i:nth-child(5){animation-delay:1.6s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+
+/* ---------- botones ---------- */
+.btn{padding:12px 26px;border-radius:999px;font-weight:800;border:2px solid var(--green)}
+.btn.solid{background:var(--green);color:#fff;box-shadow:0 6px 16px rgba(55,201,120,.4)}
+.btn.solid:hover{background:var(--green-d);border-color:var(--green-d)}
+.btn.small{padding:8px 18px;font-size:14px}
+.link{text-decoration:underline;text-underline-offset:3px;text-decoration-color:#bfe8cf;font-weight:700;color:var(--green-d)}
+.link:hover{text-decoration-color:currentColor}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* ---------- cola ---------- */
+.queue{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:12px}
+.q{background:var(--card);border:2px solid var(--green-soft);border-radius:18px;padding:16px 20px;display:grid;grid-template-columns:1fr auto;gap:4px 16px;align-items:center;box-shadow:0 4px 14px rgba(29,158,88,.08)}
+.q b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q small{color:var(--muted)}
+.q img.thumb{grid-column:1/-1;max-width:220px;border-radius:12px;border:2px solid var(--green-soft);justify-self:center}
+.bar{grid-column:1/-1;height:8px;background:var(--green-soft);border-radius:8px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--green-d));border-radius:8px;transition:width .15s}
+.q .url{grid-column:1/-1;display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap}
+.q .url input{flex:1;min-width:200px;padding:10px 14px;border:2px solid var(--green-soft);border-radius:12px;font:inherit;font-size:14px;background:var(--bg);color:var(--green-d);font-weight:700}
+.q.fail small{color:#c0392b;font-weight:700}
+.q.done{border-color:var(--green)}
+
+/* ---------- historial ---------- */
+.hist{margin-top:52px}
+.hist-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.hist-head h2{font-size:22px;color:var(--green-d)}
+.row{background:var(--card);border:2px solid var(--green-soft);border-radius:16px;padding:14px 18px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.row .n{flex:1;min-width:160px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .n small{display:block;color:var(--muted);font-weight:600}
+.row .s{color:var(--muted);font-weight:700;font-size:14px}
+.row .acts{display:flex;gap:14px;align-items:center}
+.empty{background:var(--card);border:2px dashed #cfe9d8;border-radius:16px;padding:28px;text-align:center;color:var(--muted);font-weight:700}
+
+/* ---------- pie / toast ---------- */
+.foot{text-align:center;padding:34px 20px;border-top:3px solid var(--green-soft);background:var(--card)}
+.foot p:first-child{font-family:var(--hand);font-size:22px;color:var(--green-d)}
+.foot .muted{font-size:13px;margin-top:4px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 24px;border-radius:999px;font-weight:700;box-shadow:0 10px 24px rgba(0,0,0,.25);opacity:0;transition:.25s;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:640px){
+  .tag{display:none}
+  .hero-text{left:32px;bottom:14px}
+  .drop{padding:36px 20px 30px}
+}
