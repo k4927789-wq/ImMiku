@@ -42,7 +42,7 @@
       <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Zona de subida">
         <div class="dz-icon">🎧</div>
         <p class="dz-main">Arrastra tu archivo aquí o <span class="link">haz clic para elegir</span></p>
-        <p class="dz-sub">Máx. 200 MB — Imágenes, videos, audio, documentos…</p>
+        <p class="dz-sub">Máx. ~100 MB — Imágenes, videos, audio, documentos…</p>
         <input type="file" id="fileInput" hidden />
       </div>
 
@@ -61,6 +61,7 @@
 
       <div id="result" class="result" hidden>
         <p class="result-label">✅ Tu enlace está listo:</p>
+          <p id="resultNote" class="muted" hidden></p>
         <div class="result-row">
           <input id="resultUrl" class="result-url" type="text" readonly />
           <button id="btnCopy" class="btn btn-primary">Copiar</button>
@@ -85,12 +86,12 @@
     <section id="info" class="card info">
       <h2>ℹ️ Acerca de ImMiku</h2>
       <div class="info-grid">
-        <div class="info-item"><span class="info-num">200MB</span><span class="info-desc">tamaño máximo por archivo</span></div>
-        <div class="info-item"><span class="info-num">∞</span><span class="info-desc">almacenamiento en CatBox</span></div>
+        <div class="info-item"><span class="info-num">~100MB</span><span class="info-desc">tamaño máximo por archivo</span></div>
+        <div class="info-item"><span class="info-num">4</span><span class="info-desc">hosts de respaldo automáticos</span></div>
         <div class="info-item"><span class="info-num">0</span><span class="info-desc">registros necesarios</span></div>
         <div class="info-item"><span class="info-num">100%</span><span class="info-desc">gratis para siempre</span></div>
       </div>
-      <p class="muted">Los enlaces no caducan. Compatible con imágenes, video, audio, texto y archivos comprimidos. Alojado en GitHub Pages, potenciado por la API de CatBox.</p>
+      <p class="muted">Compatible con imágenes, video, audio, texto y archivos comprimidos. La página prueba automáticamente Uguu, Lain.la, envs.sh y 0x0.st hasta conseguir tu enlace. Alojado en GitHub Pages.</p>
     </section>
   </main>
 
