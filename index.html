@@ -1,107 +1,64 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ImMiku — Subidas estilo Miku</title>
-  <meta name="description" content="ImMiku: sube fotos, videos y más, estilo Miku Nakano. Creado por Chizu." />
-  <link rel="icon" href="assets/icon.jpg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
-<base target="_blank">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ImMiku · Sube fotos y videos de Miku</title>
+<meta name="description" content="ImMiku — sube una foto o video de Miku Nakano y comparte el enlace.">
+<link rel="icon" href="https://files.catbox.moe/n9jwzx.jpeg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="bg-decor" aria-hidden="true"></div>
 
-  <header class="site-header">
-    <div class="brand">
-      <img class="brand-icon" src="https://i.ibb.co/2YP6CPxF/images-31-16.jpg" alt="Icono ImMiku" onerror="this.onerror=null;this.src='assets/icon.jpg';" />
-      <span class="brand-name">Im<span>Miku</span></span>
-    </div>
-    <nav class="nav">
-      <a href="#subir">Subir</a>
-      <a href="#historial">Historial</a>
-      <a href="#info">Info</a>
-    </nav>
-  </header>
+<header class="top">
+  <div class="brand">
+    <img class="icon" src="https://files.catbox.moe/n9jwzx.jpeg" alt="Miku">
+    <span class="logo">ImMiku</span>
+  </div>
+  <span class="tag">💚 sube · comparte · repite</span>
+</header>
 
-  <section class="hero">
-    <img class="hero-banner" src="https://i.ibb.co/Z6vFWZrs/images-31-15.jpg" alt="Banner Miku Nakano" onerror="this.onerror=null;this.src='assets/banner.jpg';" />
-    <div class="hero-text">
-      <h1>Sube tus archivos, estilo <span class="accent">Miku</span></h1>
-      <p>Fotos, videos, audio y más. Arrastra, suelta y obtén tu enlace al instante. Sin registro. Gratis.</p>
+<div class="hero">
+  <img class="banner" src="https://files.catbox.moe/ywxml2.jpeg" alt="Miku Nakano">
+  <div class="hero-text">
+    <h1>ImMiku <span class="hp">🎧</span></h1>
+    <p>Sube una foto o un video de <b>Miku Nakano</b> y recibe un enlace al instante.</p>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section id="drop" class="drop" tabindex="0">
+    <div class="notes"><i>♪</i><i>🎧</i><i>♫</i><i>💚</i><i>♪</i></div>
+    <div class="drop-text">
+      <h2>Suelta tu foto o video aquí</h2>
+      <p>Imágenes y videos. Máximo <b>200&nbsp;MB</b> por archivo · Enlace permanente.</p>
     </div>
+    <button id="pick" class="btn solid">✿ Elegir archivo</button>
+    <input id="file" type="file" accept="image/*,video/*" multiple hidden>
   </section>
 
-  <main>
-    <!-- ============ ZONA DE SUBIDA ============ -->
-    <section id="subir" class="card upload-card">
-      <h2>📤 Subir archivo</h2>
+  <ul id="queue" class="queue"></ul>
 
-      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Zona de subida">
-        <div class="dz-icon">🎧</div>
-        <p class="dz-main">Arrastra tu archivo aquí o <span class="link">haz clic para elegir</span></p>
-        <p class="dz-sub">Máx. ~100 MB — Imágenes, videos, audio, documentos…</p>
-        <input type="file" id="fileInput" hidden />
-      </div>
+  <section class="hist">
+    <div class="hist-head">
+      <h2>💾 Mis enlaces</h2>
+      <button id="clear" class="link" hidden>Vaciar historial</button>
+    </div>
+    <div id="list"></div>
+  </section>
 
-      <div id="filePreview" class="file-preview" hidden>
-        <div class="fp-info">
-          <span id="fpName" class="fp-name"></span>
-          <span id="fpSize" class="fp-size"></span>
-        </div>
-        <button id="btnUpload" class="btn btn-primary">Subir ahora ✨</button>
-      </div>
+</main>
 
-      <div id="progressWrap" class="progress-wrap" hidden>
-        <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-        <span id="progressText">0%</span>
-      </div>
+<footer class="foot">
+  <p>ImMiku 💚 Hecho con amor por <b>Chizu</b></p>
+  <p class="muted">Página estática · GitHub Pages · archivos alojados en Catbox</p>
+</footer>
 
-      <div id="result" class="result" hidden>
-        <p class="result-label">✅ Tu enlace está listo:</p>
-          <p id="resultNote" class="muted" hidden></p>
-        <div class="result-row">
-          <input id="resultUrl" class="result-url" type="text" readonly />
-          <button id="btnCopy" class="btn btn-primary">Copiar</button>
-        </div>
-        <div id="resultEmbed" class="result-embed" hidden></div>
-      </div>
-
-      <p id="errorMsg" class="error" hidden></p>
-    </section>
-
-    <!-- ============ HISTORIAL ============ -->
-    <section id="historial" class="card">
-      <div class="card-head">
-        <h2>🕘 Historial local</h2>
-        <button id="btnClear" class="btn btn-ghost">Limpiar</button>
-      </div>
-      <ul id="historyList" class="history"></ul>
-      <p id="historyEmpty" class="muted">Aún no has subido nada… ¡anímate!</p>
-    </section>
-
-    <!-- ============ INFO ============ -->
-    <section id="info" class="card info">
-      <h2>ℹ️ Acerca de ImMiku</h2>
-      <div class="info-grid">
-        <div class="info-item"><span class="info-num">~100MB</span><span class="info-desc">tamaño máximo por archivo</span></div>
-        <div class="info-item"><span class="info-num">4</span><span class="info-desc">hosts de respaldo automáticos</span></div>
-        <div class="info-item"><span class="info-num">0</span><span class="info-desc">registros necesarios</span></div>
-        <div class="info-item"><span class="info-num">100%</span><span class="info-desc">gratis para siempre</span></div>
-      </div>
-      <p class="muted">Compatible con imágenes, video, audio, texto y archivos comprimidos. La página prueba automáticamente Uguu, Lain.la, envs.sh y 0x0.st hasta conseguir tu enlace. Alojado en GitHub Pages.</p>
-    </section>
-  </main>
-
-  <footer class="footer">
-    <img src="https://i.ibb.co/2YP6CPxF/images-31-16.jpg" alt="" class="footer-icon" onerror="this.onerror=null;this.src='assets/icon.jpg';" />
-    <p>ImMiku — Creado por <strong>Chizu</strong> 💙</p>
-  </footer>
-
-  <div id="toast" class="toast" hidden></div>
-
-  <script src="js/main.js"></script>
+<div id="toast" class="toast" role="status"></div>
+<script src="app.js"></script>
 </body>
 </html>
