@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImMiku - Subidor de Archivos Miku Nakano</title>
+    <!-- Ícono de la página -->
+    <link rel="icon" href="https://files.catbox.moe/n9jwzx.jpeg" type="image/jpeg">
+    <!-- Fuente Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Estilos CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Banner Superior -->
+    <div class="banner-container">
+        <img src="https://files.catbox.moe/ywxml2.jpeg" alt="Miku Nakano Banner">
+    </div>
+
+    <!-- Carta Principal -->
+    <div class="main-card">
+        <div class="profile-header">
+            <img src="https://files.catbox.moe/n9jwzx.jpeg" alt="Miku Icon" class="profile-icon">
+            <h1 class="title">ImMiku</h1>
+        </div>
+        
+        <p class="subtitle">Sube tu imagen, video o archivo y obtén un enlace directo 🎧</p>
+
+        <!-- Formulario -->
+        <form id="uploadForm">
+            <div class="upload-box" id="dropArea">
+                <p id="fileLabel">Haz clic o arrastra un archivo aquí</p>
+                <input type="file" id="fileInput" name="fileToUpload" required>
+            </div>
+
+            <!-- Vista previa -->
+            <img id="preview" alt="Vista previa">
+
+            <button type="submit" class="btn-upload" id="submitBtn">Subir a Catbox</button>
+        </form>
+
+        <!-- Cargando -->
+        <div class="loader" id="loader"></div>
+
+        <!-- Enlace generado -->
+        <div class="result-container" id="resultContainer">
+            <p style="font-size: 0.85rem; margin-bottom: 5px; color: #555;">¡Tu enlace está listo! 🎧</p>
+            <input type="text" id="urlResult" readonly>
+            <button class="btn-copy" id="copyBtn">Copiar enlace</button>
+        </div>
+    </div>
+
+    <!-- Firma -->
+    <footer>
+        Creado por Chizu
+    </footer>
+
+    <!-- Lógica JS -->
+    <script src="script.js"></script>
+</body>
+</html>
+
