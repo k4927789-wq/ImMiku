@@ -4,6 +4,10 @@
    ========================================================= */
 
 const CATBOX_API = "https://catbox.moe/user/api.php";
+const PROXIES = [
+  (url) => "https://corsproxy.io/?url=" + encodeURIComponent(url),
+  (url) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(url),
+];
 const MAX_SIZE = 200 * 1024 * 1024; // 200 MB
 
 const $ = (id) => document.getElementById(id);
@@ -58,52 +62,128 @@ function selectFile(file) {
   result.hidden = true;
 }
 
-/* ---------- Subida a CatBox ---------- */
+/* ---------- Subida a CatBox (directo, con respaldo por proxy) ---------- */
 btnUpload.addEventListener("click", () => {
   if (!currentFile) return;
   hideError();
-  btnUpload.disabled = true;
-  btnUpload.textContent = "Subiendo…";
-  progressWrap.hidden = false;
-  result.hidden = true;
+  setUploading(true);
   setProgress(0);
-
-  const formData = new FormData();
-  formData.append("reqtype", "fileupload");
-  formData.append("fileToUpload", currentFile);
-
-  const xhr = new XMLHttpRequest();
-  xhr.open("POST", CATBOX_API, true);
-
-  xhr.upload.addEventListener("progress", (e) => {
-    if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
-  });
-
-  xhr.addEventListener("load", () => {
-    btnUpload.disabled = false;
-    btnUpload.textContent = "Subir ahora ✨";
-    if (xhr.status === 200 && xhr.responseText.startsWith("http")) {
+  uploadToCatBox(currentFile, {
+    onProgress: setProgress,
+    onSuccess: (url) => {
       setProgress(100);
-      showResult(xhr.responseText.trim(), currentFile);
-      saveToHistory(currentFile.name, xhr.responseText.trim());
+      showResult(url, currentFile);
+      saveToHistory(currentFile.name, url);
       showToast("✅ ¡Subida completada!");
       currentFile = null;
       fileInput.value = "";
-    } else {
-      showError("❌ Error al subir: " + (xhr.responseText || "intenta de nuevo"));
+      setUploading(false);
+    },
+    onError: (msg) => {
+      setUploading(false);
       progressWrap.hidden = true;
+      showError(msg);
+    },
+  });
+});
+
+function setUploading(state) {
+  btnUpload.disabled = state;
+  btnUpload.textContent = state ? "Subiendo…" : "Subir ahora ✨";
+  if (state) { progressWrap.hidden = false; result.hidden = true; }
+}
+
+/**
+ * Intenta la subida directa a CatBox. Si el navegador la bloquea
+ * (CORS, adblock, firewall → status 0), reintenta automáticamente
+ * a través de proxies CORS públicos hasta que una funcione.
+ */
+function uploadToCatBox(file, { onProgress, onSuccess, onError }, attempt = 0) {
+  const direct = attempt === 0;
+  const endpoint = direct ? CATBOX_API : PROXIES[attempt - 1](CATBOX_API);
+
+  const formData = new FormData();
+  formData.append("reqtype", "fileupload");
+  formData.append("fileToUpload", file);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open("POST", endpoint, true);
+  xhr.timeout = 300000; // 5 min
+
+  if (direct) {
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    });
+  } else {
+    // A través del proxy no hay eventos de progreso: mostramos animación indeterminada
+    fakeProgress(onProgress);
+  }
+
+  xhr.addEventListener("load", () => {
+    stopFakeProgress();
+    const resp = (xhr.responseText || "").trim();
+
+    if (xhr.status >= 200 && xhr.status < 300 && isCatBoxUrl(resp)) {
+      onSuccess(resp);
+      return;
+    }
+
+    // ¿La respuesta es un error de CatBox (ej. tipo de archivo prohibido)?
+    if (xhr.status >= 200 && xhr.status < 300 && resp && !isCatBoxUrl(resp)) {
+      stopFakeProgress();
+      onError("❌ CatBox rechazó el archivo: " + resp + " (si es .exe/.scr/.bat, prueba comprimirlo en .zip o .7z)");
+      return;
+    }
+
+    // Bloqueo de red/CORS → probar siguiente ruta
+    if (attempt < PROXIES.length) {
+      uploadToCatBox(file, { onProgress, onSuccess, onError }, attempt + 1);
+    } else {
+      onError(buildFailMsg(xhr));
     }
   });
 
   xhr.addEventListener("error", () => {
-    btnUpload.disabled = false;
-    btnUpload.textContent = "Subir ahora ✨";
-    progressWrap.hidden = true;
-    showError("❌ Falló la conexión con CatBox. Revisa tu internet e intenta otra vez.");
+    stopFakeProgress();
+    if (attempt < PROXIES.length) {
+      uploadToCatBox(file, { onProgress, onSuccess, onError }, attempt + 1);
+    } else {
+      onError("❌ No se pudo conectar con CatBox. Revisa tu internet, desactiva el adblock para esta página e intenta de nuevo.");
+    }
+  });
+
+  xhr.addEventListener("timeout", () => {
+    stopFakeProgress();
+    onError("⏱️ La subida tardó demasiado (más de 5 min). Intenta con un archivo más liviano.");
   });
 
   xhr.send(formData);
-});
+}
+
+function isCatBoxUrl(text) {
+  return /^https?:\/\/(files\.)?catbox\.moe\//i.test(text);
+}
+
+function buildFailMsg(xhr) {
+  let detail = "";
+  try { detail = (xhr.responseText || "").trim().slice(0, 200); } catch {}
+  return "❌ Falló la subida (HTTP " + xhr.status + (detail ? ": " + detail : "") +
+         "). Desactiva extensiones (adblock/VPN) y recarga la página.";
+}
+
+/* Barra de progreso "indeterminada" para cuando usamos proxy */
+let fakeTimer = null;
+function fakeProgress(onProgress) {
+  let p = 5;
+  onProgress(p);
+  fakeTimer = setInterval(() => {
+    p = Math.min(p + Math.random() * 4, 92); // nunca llega al 100 hasta confirmar
+    onProgress(Math.round(p));
+  }, 400);
+}
+function stopFakeProgress() {
+  if (fakeTimer) { clearInterval(fakeTimer); fakeTimer = null; }
+}
 
 /* ---------- Resultado ---------- */
 function showResult(url, file) {
@@ -213,4 +293,4 @@ function formatBytes(bytes) {
   const k = 1024, sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return (bytes / Math.pow(k, i)).toFixed(1) + " " + sizes[i];
-    }
+}
